@@ -1,0 +1,24 @@
+digraph ER {
+  graph [rankdir=LR, bgcolor="white", fontname="Helvetica", pad=0.4, nodesep=0.5, ranksep=1.1];
+  node  [shape=plain, fontname="Helvetica"];
+  edge  [fontname="Helvetica", fontsize=10, color="#445566", arrowhead=crow, arrowtail=tee, dir=both];
+
+  departments [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#0e1a2b"><FONT COLOR="white"><B>departments</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>dept_id (PK)</U><BR ALIGN="LEFT"/>name (UQ)<BR ALIGN="LEFT"/>code (UQ)<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  users [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#0f8b8d"><FONT COLOR="white"><B>users</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>user_id (PK)</U><BR ALIGN="LEFT"/>full_name, email (UQ)<BR ALIGN="LEFT"/>password_hash<BR ALIGN="LEFT"/>role (CHECK)<BR ALIGN="LEFT"/>dept_id (FK)<BR ALIGN="LEFT"/>phone, is_active<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  resource_types [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#0e1a2b"><FONT COLOR="white"><B>resource_types</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>type_id (PK)</U><BR ALIGN="LEFT"/>type_name (UQ)<BR ALIGN="LEFT"/>icon, is_equipment<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  resources [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#0f8b8d"><FONT COLOR="white"><B>resources</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>resource_id (PK)</U><BR ALIGN="LEFT"/>name (UQ)<BR ALIGN="LEFT"/>type_id (FK)<BR ALIGN="LEFT"/>building, floor, capacity<BR ALIGN="LEFT"/>status (CHECK)<BR ALIGN="LEFT"/>parent_id (FK to itself)<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  bookings [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#e0434a"><FONT COLOR="white"><B>bookings</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>booking_id (PK)</U><BR ALIGN="LEFT"/>resource_id (FK)<BR ALIGN="LEFT"/>user_id (FK)<BR ALIGN="LEFT"/>title, attendees<BR ALIGN="LEFT"/>start_time, end_time<BR ALIGN="LEFT"/>status (CHECK)<BR ALIGN="LEFT"/>CHECK(end_time &gt; start_time)<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  maintenance [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#3563d4"><FONT COLOR="white"><B>maintenance</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>maint_id (PK)</U><BR ALIGN="LEFT"/>resource_id (FK)<BR ALIGN="LEFT"/>issue, technician<BR ALIGN="LEFT"/>start_time, end_time<BR ALIGN="LEFT"/>status (CHECK)<BR ALIGN="LEFT"/>created_by (FK)<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  notifications [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#0e1a2b"><FONT COLOR="white"><B>notifications</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>notif_id (PK)</U><BR ALIGN="LEFT"/>user_id (FK)<BR ALIGN="LEFT"/>message, is_read<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+  audit_log [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="5"><TR><TD BGCOLOR="#0e1a2b"><FONT COLOR="white"><B>audit_log</B></FONT></TD></TR><TR><TD ALIGN="LEFT"><U>log_id (PK)</U><BR ALIGN="LEFT"/>table_name, record_id<BR ALIGN="LEFT"/>action, details<BR ALIGN="LEFT"/>logged_at<BR ALIGN="LEFT"/></TD></TR></TABLE>>];
+
+  departments -> users [label="employs"];
+  resource_types -> resources [label="classifies"];
+  resources -> resources [label="installed in"];
+  users -> bookings [label="makes"];
+  resources -> bookings [label="is booked in"];
+  resources -> maintenance [label="serviced via"];
+  users -> maintenance [label="scheduled by"];
+  users -> notifications [label="receives"];
+  bookings -> audit_log [label="triggers write", style=dashed];
+}

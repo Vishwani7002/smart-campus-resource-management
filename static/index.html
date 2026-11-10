@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Campus — Resource Allocation & Conflict Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+</head>
+<body>
+<div id="auth" class="auth hidden">
+  <section class="auth-hero">
+    <div>
+      <div class="brand"><span class="logo">🏛️</span> Smart Campus</div>
+      <h1>Every room, lab and projector. Never double-booked.</h1>
+      <p>Reserve campus resources in seconds. The database itself checks every request, so two people can never hold the same slot.</p>
+      <div class="mini-tl" aria-hidden="true">
+        <small>Seminar Hall A · today</small>
+        <div class="mini-row"><span class="b1">Guest lecture</span><span class="b2">Club meeting</span></div>
+        <div class="mini-row"><span class="bx">Your request</span></div>
+        <div class="mini-hint">Blocked: overlaps with Guest lecture. Free at 12:00.</div>
+      </div>
+    </div>
+    <div class="auth-foot">Database Management Systems project · SQLite + Flask</div>
+  </section>
+  <section class="auth-panel"><div class="auth-box" id="auth-box"></div></section>
+</div>
+
+<div id="app" class="app hidden">
+  <aside class="side">
+    <div class="brand"><span class="logo">🏛️</span> Smart Campus</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-user"><div class="avatar" id="u-av"></div><div><b id="u-name"></b><small id="u-role"></small></div></div>
+  </aside>
+  <main class="main"><div id="view"></div></main>
+</div>
+<div id="modal-root"></div>
+<div class="toasts" id="toasts"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
