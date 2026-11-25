@@ -1,4 +1,4 @@
-# 🏛️ Smart Campus Resource Allocation & Conflict Management System
+#  Smart Campus Resource Allocation & Conflict Management System
 
 A full-stack, database-driven system to **reserve and manage classrooms, laboratories, seminar halls and equipment** – while the **database itself detects and prevents scheduling conflicts**.
 
