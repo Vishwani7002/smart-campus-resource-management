@@ -1,187 +1,254 @@
-#  Smart Campus Resource Allocation & Conflict Management System
+# Smart Campus Resource Manager
 
-A full-stack, database-driven system to **reserve and manage classrooms, laboratories, seminar halls and equipment** – while the **database itself detects and prevents scheduling conflicts**.
+A booking system for classrooms, labs, seminar halls and equipment where **the database itself refuses to double-book anything**.
 
-| Layer | Technology |
-|---|---|
-| Database | **SQLite** (tables, constraints, indexes, views, triggers, transactions) |
-| Backend | **Python 3 + Flask** REST API, shared service layer |
-| Frontend | HTML5 + CSS3 + vanilla JavaScript single-page app (no build step) |
-| CLI | Interactive terminal application (same business logic as the web app) |
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Flask](https://img.shields.io/badge/Flask-3.x-lightgrey) ![SQLite](https://img.shields.io/badge/SQLite-3-003B57) ![Tests](https://img.shields.io/badge/tests-8%20passing-brightgreen)
+
+Most booking apps check for clashes in application code, which breaks the moment two requests arrive together or someone writes to the database directly. I wanted to see how far I could push that responsibility down into the database, so the rules hold no matter who is writing: the web app, the CLI, or a raw SQL console.
+
+It comes with a web interface and an interactive terminal app, both running on the same service layer and the same SQLite database.
 
 ---
 
-## 1. Quick start
+## Features
+
+- **Conflict-proof bookings.** A trigger rejects any booking that overlaps another one on the same resource, even from raw SQL.
+- **Smart suggestions.** When a slot is taken, the app proposes free time slots on the same resource and other free rooms of the same type.
+- **Approval workflow.** Student and staff requests stay pending (and hold the slot) until an admin approves. Faculty and admin bookings are approved instantly.
+- **Maintenance handling.** Scheduling maintenance automatically cancels clashing bookings and notifies the affected users.
+- **Notifications and audit trail.** Triggers write every change to an audit log and tell users when a booking is approved, rejected or cancelled.
+- **Reports.** Utilisation hours, peak booking hours, department usage, most active users and never-used resources.
+- **Web app and CLI.** Pick whichever you like; both share the same business logic.
+
+## Tech stack
+
+| Part | Technology |
+|---|---|
+| Database | SQLite (constraints, indexes, views, triggers, transactions) |
+| Backend | Python 3, Flask REST API |
+| Frontend | HTML, CSS, vanilla JavaScript (no build step) |
+| CLI | Python, interactive menus |
+| Tests | `unittest` |
+
+---
+
+## Getting started
 
 ```bash
-# 1. Install Python 3.9+  (check with: python --version)
-# 2. Open a terminal inside the project folder
-pip install -r requirements.txt        # installs Flask (only dependency)
-
-# ---- Web application ----
-python app.py                          # first run auto-creates campus.db + demo data
-# open  http://127.0.0.1:5000
-
-# ---- Command-line application ----
-python cli.py                          # interactive menus
-python cli.py seed                     # reset database with fresh demo data
-python cli.py initdb                   # empty database (schema only)
+git clone https://github.com/<your-username>/smart-campus-resource-manager.git
+cd smart-campus-resource-manager
+pip install -r requirements.txt
 ```
 
-> Windows: use `python`; macOS/Linux: use `python3`.
-> The very first run creates the database automatically, so there is nothing else to install or configure.
+**Web app**
+```bash
+python app.py
+# open http://127.0.0.1:5000
+```
+
+**Terminal app**
+```bash
+python cli.py
+```
+
+The database and demo data are created automatically on first run. To reset it:
+```bash
+python cli.py seed
+```
+
+Use `python3` instead of `python` on macOS and Linux.
 
 ### Demo accounts
+
 | Role | Email | Password |
 |---|---|---|
-| Administrator | admin@campus.edu | admin123 |
+| Admin | admin@campus.edu | admin123 |
 | Faculty | meera.rao@campus.edu | faculty123 |
 | Staff | kavita@campus.edu | staff123 |
 | Student | rahul@campus.edu | student123 |
 
-You can also click **Create account** to register a brand-new user (name, email, role, department, phone, password). New users are logged in immediately and can start booking.
+You can also register a new account from either interface.
 
 ---
 
-## 2. How to operate the system
+## Using it
 
-### As a student / staff / faculty
-1. **Register or log in** (demo buttons fill credentials for you).
-2. **Dashboard** – live stats: free resources, bookings today, your upcoming bookings.
-3. **Resources** – search and filter classrooms, labs, halls, equipment. Click **Schedule** to see a resource's day.
-4. **Book a resource** – choose date and time → the list instantly shows which resources are **free** or **busy (and why)** → pick one → add a title → **Confirm booking**.
-   * Faculty and admin bookings are **approved instantly**; student and staff bookings are **pending** until an admin approves (the slot is held meanwhile, so nobody else can take it).
-   * If you pick a busy slot the **database rejects it** and the app offers **free alternative times** and **other free rooms** of the same type – one click to switch.
-5. **My bookings** – filter by status; cancel your own bookings.
-6. 🔔 **Notifications** – you are told when a booking is approved, rejected or auto-cancelled.
+### Web app
+1. Log in (or register) and open **Book a resource**.
+2. Choose a date and time. Every resource is shown as **free** or **busy**, with the reason.
+3. Pick one, add a title and confirm.
+4. Try booking an overlapping time. You get a clear error plus one-click alternatives.
+5. As an admin, approve requests under **All bookings**, schedule servicing under **Maintenance**, and check **Reports** and the **Audit log**.
 
-### As an administrator
-* **All bookings** – **Approve / Reject / Cancel** any request.
-* **Resources → Add resource / Edit** – create rooms or equipment, change status (available / maintenance / retired). Taking a resource out of service auto-cancels its future bookings.
-* **Maintenance → Schedule maintenance** – pick a resource and window; clashing bookings are cancelled automatically by a trigger and users are notified.
-* **Reports** – utilisation hours, peak hours, department usage, most active users, never-used resources, conflicts blocked.
-* **Audit log** – every insert / status change recorded by triggers.
-* **Users** – see everyone, activate / deactivate accounts.
-
-### CLI (terminal) walkthrough
+### Terminal app
 ```
-python cli.py
- 1. Login   2. Register new user   3. Exit
+1. Login    2. Register new user    3. Exit
 ```
-After logging in a numbered menu appears (Dashboard, Browse, Find available, Book, My bookings, Cancel, Day schedule with text timeline, Notifications; admins also get Approvals, Add resource, Maintenance, Reports, Audit log, Users). Booking in the CLI shows the same conflict messages and alternative suggestions.
+After login you get a numbered menu: dashboard, browse resources, find available resources, book, my bookings, cancel, day schedule (with a text timeline) and notifications. Admins also get approvals, add resource, change status, maintenance, reports, audit log and users.
+
+The last admin menu item, **DBMS concepts live demo**, runs ten short experiments against the real database and prints the SQL for each one:
+
+1. Listing schema objects (tables, views, indexes, triggers)
+2. A join through a view
+3. `GROUP BY` with `HAVING`
+4. A correlated `NOT EXISTS` subquery
+5. A self join
+6. A raw-SQL double booking rejected by the trigger, plus `CHECK` and capacity errors
+7. A transaction rolled back
+8. The query plan using the composite index
+9. Ten threads booking the same slot at once
+10. The audit trail written by triggers
+
+Everything the demo writes is rolled back or removed afterwards.
 
 ---
 
-### Run the tests / SQL demo
-```bash
-python tests.py                        # 8 automated tests (uses a temporary DB)
-python docs/run_demo_queries.py        # shows SQL concepts + trigger rejections
+## How conflict detection works
+
+Two bookings on the same resource overlap when:
+
 ```
+existing.start_time < new.end_time  AND  existing.end_time > new.start_time
+```
+
+That condition lives in a `BEFORE INSERT` trigger (and a matching `BEFORE UPDATE` trigger for approvals):
+
+```sql
+CREATE TRIGGER trg_booking_before_insert
+BEFORE INSERT ON bookings
+BEGIN
+    SELECT RAISE(ABORT, 'CONFLICT: Resource is already booked during this time slot.')
+    WHERE NEW.status IN ('pending','approved')
+      AND EXISTS (SELECT 1 FROM bookings b
+                  WHERE b.resource_id = NEW.resource_id
+                    AND b.status IN ('pending','approved')
+                    AND b.start_time < NEW.end_time
+                    AND b.end_time   > NEW.start_time);
+END;
+```
+
+Back-to-back bookings (10:00–11:00 and 11:00–12:00) are allowed. The same trigger also checks capacity, maintenance windows and out-of-service resources.
+
+**Concurrency.** Every write runs inside `BEGIN IMMEDIATE`, which takes SQLite's write lock before the overlap check. Two simultaneous requests are therefore serialised, and the second one always sees the first. The test suite fires 10 threads at one slot and asserts that exactly one wins.
 
 ---
 
-## 3. Project structure
-```
-smart_campus/
-├── app.py              Flask REST API + serves the frontend
-├── cli.py              Command-line interface
-├── services.py         Business logic (shared by web + CLI)
-├── db.py               Connection + ACID transaction helpers
-├── schema.sql          ★ Tables, constraints, indexes, views, triggers
-├── seed.py             Demo data generator
-├── tests.py            Automated tests (incl. concurrency test)
-├── requirements.txt
-├── static/             index.html · style.css · app.js  (frontend)
-└── docs/
-    ├── ER_Diagram.png          Entity-Relationship diagram
-    ├── demo_queries.sql        SQL to demonstrate DBMS concepts live
-    ├── run_demo_queries.py     Runs those queries (no sqlite3 CLI needed)
-    └── PRESENTATION_GUIDE.md   Slides outline, demo script, viva Q&A
-```
-**Architecture:** `Browser / CLI  →  Flask routes (app.py) / menus (cli.py)  →  services.py  →  SQLite (schema.sql)`
-
----
-
-## 4. Database design
+## Database design
 
 ![ER diagram](docs/ER_Diagram.png)
 
-| Table | Purpose | Key constraints |
-|---|---|---|
-| departments | Academic / admin departments | PK, UNIQUE name & code |
-| users | Accounts (admin, faculty, staff, student) | UNIQUE email, CHECK role, FK dept |
-| resource_types | Classroom, Laboratory, Seminar Hall, Conference Room, Equipment | UNIQUE name |
-| resources | Every bookable thing | FK type, **self-referencing FK** `parent_id`, CHECK status, CHECK capacity ≥ 0 |
-| bookings | Reservations | FKs, CHECK `end_time > start_time`, CHECK date format, CHECK status |
-| maintenance | Repair / service windows | FK resource, CHECK `end_time > start_time` |
-| notifications | Messages to users | FK user (ON DELETE CASCADE) |
-| audit_log | Automatic change history | written only by triggers / system |
+| Table | Purpose |
+|---|---|
+| `departments` | Departments, with unique name and code |
+| `users` | Accounts with role (`admin`, `faculty`, `staff`, `student`) |
+| `resource_types` | Classroom, Laboratory, Seminar Hall, Conference Room, Equipment |
+| `resources` | Every bookable thing; `parent_id` is a self-referencing key (equipment installed in a room) |
+| `bookings` | Reservations, with `CHECK (end_time > start_time)` and a date-format check |
+| `maintenance` | Servicing windows |
+| `notifications` | Messages to users |
+| `audit_log` | History written by triggers |
 
-Normalisation: all tables are in **3NF** – no repeating groups, every non-key attribute depends on the key, and lookups (`departments`, `resource_types`) are separated to avoid redundancy.
+The schema is in 3NF. Lookup data (departments, resource types) lives in its own tables, every non-key column depends on the key, and the audit log and notifications are deliberately denormalised because history must not change when source rows do.
 
----
+**Also in `schema.sql`:** 6 indexes (including a composite `bookings(resource_id, start_time, end_time)` for the overlap check), 2 views (`v_booking_details`, `v_resource_utilization`) and 11 triggers (conflict checks, maintenance cascade, audit and notifications).
 
-## 5. Core DBMS concepts used (and where)
+### Database concepts used
 
-| # | Concept | Where it is used |
-|---|---|---|
-| 1 | **ER modelling & relational schema** | 8 tables, 1:N relationships, `docs/ER_Diagram.png` |
-| 2 | **Normalisation (1NF–3NF)** | Separate departments / resource_types / users / resources / bookings |
-| 3 | **Primary keys & Foreign keys** | All tables; `PRAGMA foreign_keys = ON`; ON DELETE RESTRICT / CASCADE / SET NULL |
-| 4 | **Self-referencing foreign key** | `resources.parent_id` (equipment installed in a room) |
-| 5 | **Domain & integrity constraints** | NOT NULL, UNIQUE, CHECK (roles, statuses, time order, date format via GLOB, capacity) |
-| 6 | **Triggers – conflict prevention** | `trg_booking_before_insert`, `trg_booking_before_update`: overlap, capacity, maintenance & out-of-service checks using `RAISE(ABORT)` |
-| 7 | **Triggers – cascading business rules** | `trg_maint_cascade_cancel` (auto-cancel clashing bookings), maintenance start/finish updates resource status |
-| 8 | **Triggers – audit & notifications** | `trg_audit_*`, `trg_notify_booking` |
-| 9 | **Interval-overlap algorithm** | `existing.start < new.end AND existing.end > new.start` |
-| 10 | **Transactions & ACID** | `BEGIN IMMEDIATE … COMMIT/ROLLBACK` in `db.transaction()`; atomic, isolated bookings, rollback on error |
-| 11 | **Concurrency control** | `BEGIN IMMEDIATE` takes the write lock first → two users can't insert overlapping bookings simultaneously (serialisable) |
-| 12 | **Indexing** | `idx_bookings_resource_time (resource_id, start_time, end_time)` etc. speed overlap checks |
-| 13 | **Views** | `v_booking_details` (4-table join), `v_resource_utilization` (aggregates) |
-| 14 | **Joins** | INNER, LEFT, SELF join across many queries |
-| 15 | **Aggregation** | COUNT, SUM, ROUND, GROUP BY, HAVING (reports) |
-| 16 | **Subqueries** | Correlated `NOT EXISTS` (availability), `NOT IN` (never-used resources), scalar subqueries in triggers |
-| 17 | **Set operation** | `UNION ALL` to merge bookings + maintenance when finding free slots |
-| 18 | **Security** | Salted PBKDF2-SHA256 password hashes, parameterised queries (SQL-injection safe), role-based access (RBAC), HTML escaping in UI |
-| 19 | **Referential actions** | Retire (not delete) resources with history; FK prevents orphan rows |
-| 20 | **Audit trail / logging** | `audit_log` populated by triggers, including blocked conflict attempts |
-
-### The conflict-detection rule (explain this in the viva)
-Two bookings on the same resource **overlap** when
-`existing.start_time < new.end_time  AND  existing.end_time > new.start_time`.
-This runs inside a **BEFORE INSERT trigger** – so even a direct SQL insert, a bug in the app, or two simultaneous users cannot create a double booking. The app layer adds friendly messages and alternative suggestions on top of the database guarantee.
+| Concept | Where |
+|---|---|
+| Primary, foreign and self-referencing keys | All tables, `resources.parent_id` |
+| Constraints | `NOT NULL`, `UNIQUE`, `CHECK` for roles, statuses, time order, capacity and date format |
+| Triggers | Conflict prevention, maintenance cascade, audit log, notifications |
+| Transactions and ACID | `BEGIN IMMEDIATE` / `COMMIT` / `ROLLBACK` helper in `db.py` |
+| Indexing | Composite index for overlap lookups |
+| Views | Booking details (multi-table join), resource utilisation (aggregates) |
+| Joins and subqueries | Inner, left and self joins; `NOT EXISTS` and `NOT IN` |
+| Aggregation | `COUNT`, `SUM`, `GROUP BY`, `HAVING` in reports |
+| Set operations | `UNION ALL` to merge bookings and maintenance when finding free gaps |
+| Security | Salted PBKDF2-SHA256 hashes, parameterised queries, role-based access |
 
 ---
 
-## 6. REST API (summary)
+## Business rules
+
+- Campus hours are 07:00 to 22:00.
+- A booking must start and end on the same day, last between 15 minutes and 12 hours, and not be in the past.
+- Attendees cannot exceed capacity.
+- No overlap with another pending or approved booking, or with a maintenance window.
+- Resources under maintenance or retired cannot be booked.
+- Pending requests whose start time passes expire automatically; finished bookings are marked completed.
+- Only admins approve or reject. Users can cancel only their own bookings.
+
+---
+
+## Project structure
+
+```
+.
+├── app.py              Flask REST API, also serves the frontend
+├── cli.py              Interactive terminal app
+├── services.py         Business logic shared by web and CLI
+├── db.py               Connections and the transaction helper
+├── schema.sql          Tables, constraints, indexes, views, triggers
+├── seed.py             Demo data generator
+├── dbms_demo.py        The live demo behind the CLI's last menu item
+├── tests.py            Automated tests
+├── requirements.txt
+├── static/             index.html, style.css, app.js
+└── docs/
+    ├── ER_Diagram.png
+    ├── demo_queries.sql
+    └── run_demo_queries.py
+```
+
+**Flow:** browser or CLI → Flask routes / menus → `services.py` → SQLite.
+
+## API overview
+
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | /api/register · /api/login · /api/logout | Authentication (session cookie) |
-| GET | /api/me · /api/meta | Current user · departments & types |
-| GET/POST | /api/resources | List/search · add (admin) |
-| PUT/DELETE | /api/resources/<id> | Edit/retire · delete (admin) |
-| GET | /api/resources/<id>/schedule?date= | Day schedule |
-| GET | /api/availability?start=&end=&type_id= | Free/busy for all resources |
-| GET/POST | /api/bookings | List · create |
-| POST | /api/bookings/<id>/status | approve / reject / cancel |
-| GET/POST | /api/maintenance (+ /<id>/status) | Maintenance (admin writes) |
-| GET | /api/dashboard · /api/reports · /api/audit · /api/users | Insights (reports, audit, users: admin) |
-| GET/POST | /api/notifications (+ /read) | Inbox |
+| POST | `/api/register`, `/api/login`, `/api/logout` | Authentication (session cookie) |
+| GET | `/api/me`, `/api/meta` | Current user, departments and types |
+| GET / POST | `/api/resources` | Search and list; add (admin) |
+| PUT / DELETE | `/api/resources/<id>` | Edit or retire; delete (admin) |
+| GET | `/api/resources/<id>/schedule?date=` | Day schedule |
+| GET | `/api/availability?start=&end=&type_id=` | Free or busy for every resource |
+| GET / POST | `/api/bookings` | List and create |
+| POST | `/api/bookings/<id>/status` | Approve, reject or cancel |
+| GET / POST | `/api/maintenance` | Maintenance windows (admin writes) |
+| GET | `/api/dashboard`, `/api/reports`, `/api/audit`, `/api/users` | Insights (reports, audit, users are admin only) |
+| GET / POST | `/api/notifications` | Inbox |
 
 ---
 
-## 7. Business rules enforced
-* Campus hours 07:00–22:00; booking must start & end on the same day; 15 min – 12 h; not in the past.
-* Attendees ≤ resource capacity.
-* No overlap with another pending/approved booking **or** a maintenance window.
-* Resources under maintenance or retired cannot be booked.
-* Only admins approve/reject; users may cancel only their own bookings.
-* Pending requests whose start time passes are auto-expired; finished bookings auto-complete.
+## Tests
 
-## 8. Troubleshooting
-| Problem | Fix |
-|---|---|
-| `ModuleNotFoundError: flask` | `pip install -r requirements.txt` |
-| Port 5000 busy | Edit `port=5000` at the bottom of `app.py` |
-| Want fresh data | `python cli.py seed` (stop the web server first) |
-| Fonts look plain offline | Cosmetic only – Google Fonts need internet |
+```bash
+python tests.py
+```
+
+Eight tests run against a temporary database and cover: registration and login rules, overlap rejection (and back-to-back bookings being allowed), the trigger firing on raw SQL, capacity and `CHECK` constraints, the maintenance cascade with notifications, approval workflow and role permissions, the 10-thread concurrency race, and reports and audit output.
+
+To run the demo queries against your own database:
+```bash
+python docs/run_demo_queries.py
+```
+The two statements shown as rejected are meant to fail; they demonstrate the trigger and a `CHECK` constraint.
+
+## Known limitations
+
+- SQLite allows one writer at a time and has no stored procedures or range types. On PostgreSQL I would replace the overlap trigger with an exclusion constraint: `EXCLUDE USING gist (resource_id WITH =, tsrange(start_time, end_time) WITH &&)`.
+- Booking status housekeeping (completing and expiring bookings) runs on requests rather than as a background job.
+- No email or SMS notifications yet.
+
+## Roadmap
+
+- [ ] Recurring bookings
+- [ ] Timetable import
+- [ ] Email / SMS notifications
+- [ ] PostgreSQL support with an exclusion constraint
+- [ ] QR check-in for rooms
+
+---
+
+Built by [Vishwani](https://github.com/<your-username>). Feedback and ideas are welcome, so feel free to open an issue.
