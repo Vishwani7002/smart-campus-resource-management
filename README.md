@@ -235,20 +235,5 @@ python docs/run_demo_queries.py
 ```
 The two statements shown as rejected are meant to fail; they demonstrate the trigger and a `CHECK` constraint.
 
-## Known limitations
-
-- SQLite allows one writer at a time and has no stored procedures or range types. On PostgreSQL I would replace the overlap trigger with an exclusion constraint: `EXCLUDE USING gist (resource_id WITH =, tsrange(start_time, end_time) WITH &&)`.
-- Booking status housekeeping (completing and expiring bookings) runs on requests rather than as a background job.
-- No email or SMS notifications yet.
-
-## Roadmap
-
-- [ ] Recurring bookings
-- [ ] Timetable import
-- [ ] Email / SMS notifications
-- [ ] PostgreSQL support with an exclusion constraint
-- [ ] QR check-in for rooms
-
----
-
-Built by [Vishwani](https://github.com/<your-username>). Feedback and ideas are welcome, so feel free to open an issue.
+Built by [Vishwani](https://github.com/Vishwani7002). 
+Feedback and ideas are welcome, so feel free to open an issue.
